@@ -3,7 +3,7 @@ library 'pipeline-library'
 pipeline {
   agent none
   environment {
-    OPS_CASC_UPDATE_SECRET = credentials('casc-workshop-casc-update-secret')
+    OPS_CASC_UPDATE_SECRET = credentials('casc-update-secret')
     CONTROLLER_CASC_UPDATE_SECRET = event.secret.toString()
   }
   options { timeout(time: 10, unit: 'MINUTES') }
