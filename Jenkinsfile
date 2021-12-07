@@ -33,6 +33,7 @@ pipeline {
           sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git ${BUNDLE_ID}"
           sh "kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins"
         }
+        publishEvent event:jsonEvent("""{'controller':{'name':'${BUNDLE_ID}','action':'casc_update_available'}"""), verbose: true
       }
     }
   }
