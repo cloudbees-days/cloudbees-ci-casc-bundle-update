@@ -18,7 +18,10 @@ pipeline {
         }
       }
       environment {
-        BUNDLE_ID = event.controller.bundle_id.toString().toLowerCase()
+        BUNDLE_ID = event.controller.bundle_id.toString().toLowerCase()        
+        GITHUB_ORGANIZATION = event.github.organization.toString().replaceAll(" ", "-")
+        GITHUB_REPOSITORY = event.github.repository.toString().toLowerCase()
+        GITHUB_USER = event.github.user.toString().toLowerCase(
       }
       when {
         triggeredBy 'EventTriggerCause'
@@ -26,6 +29,7 @@ pipeline {
       }
       steps {
         container("kubectl") {
+          sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git ."
           sh "mkdir -p ${BUNDLE_ID}"
           sh "find -name '*.yaml' | xargs cp --parents -t ${BUNDLE_ID}"
           sh "kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins"
