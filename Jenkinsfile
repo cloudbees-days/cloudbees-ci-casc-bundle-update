@@ -28,9 +28,8 @@ pipeline {
       }
       steps {
         container("kubectl") {
-          sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git ."
           sh "mkdir -p ${BUNDLE_ID}"
-          sh "find -name '*.yaml' | xargs cp --parents -t ${BUNDLE_ID}"
+          sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git ${BUNDLE_ID}"
           sh "kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins"
         }
       }
