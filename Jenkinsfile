@@ -21,7 +21,6 @@ pipeline {
         BUNDLE_ID = event.controller.bundle_id.toString().toLowerCase()        
         GITHUB_ORGANIZATION = event.github.organization.toString().replaceAll(" ", "-")
         GITHUB_REPOSITORY = event.github.repository.toString().toLowerCase()
-        GITHUB_USER = event.github.user.toString().toLowerCase(
       }
       when {
         triggeredBy 'EventTriggerCause'
