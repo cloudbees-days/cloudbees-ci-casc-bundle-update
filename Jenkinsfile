@@ -17,10 +17,11 @@ pipeline {
           yaml libraryResource ('podtemplates/kubectl.yml')
         }
       }
-      environment {
-        BUNDLE_ID = event.controller.bundle_id.toString().toLowerCase()        
+      environment {       
         GITHUB_ORGANIZATION = event.github.organization.toString().replaceAll(" ", "-")
         GITHUB_REPOSITORY = event.github.repository.toString().toLowerCase()
+        CONTROLLER_FOLDER = GITHUB_ORGANIZATION.toLowerCase()
+        BUNDLE_ID = "${CONTROLLER_FOLDER}-${GITHUB_REPOSITORY}"
         AUTO_RELOAD = event.casc.auto_reload.toString()
       }
       when {
