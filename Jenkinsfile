@@ -29,7 +29,28 @@ pipeline {
         environment name: 'CONTROLLER_CASC_UPDATE_SECRET', value: OPS_CASC_UPDATE_SECRET
       }
       stages {
-        stage('Copy Files') {
+        stage('Copy Files CI Workshop') {
+          when {
+            environment name: 'GITHUB_REPOSITORY' value: 'ci-config-bundle'
+          }
+          environment {
+            BUNDLE_ID = event.controller.bundle_id.toString().toLowerCase()  
+          }
+          steps {
+            container("kubectl") {
+              sh "rm -rf ./${BUNDLE_ID} || true"
+              sh "mkdir -p ${BUNDLE_ID}"
+              sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git ${BUNDLE_ID}"
+              sh "kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins"
+            }
+          }
+        }
+        stage('Copy Files CasC Workshop') {
+          when {
+            not {
+              environment name: 'GITHUB_REPOSITORY' value: 'ci-config-bundle'
+            }
+          }
           steps {
             container("kubectl") {
               sh "rm -rf ./${BUNDLE_ID} || true"
