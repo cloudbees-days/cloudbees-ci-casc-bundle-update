@@ -31,7 +31,7 @@ pipeline {
       stages {
         stage('Copy Files CI Workshop') {
           when {
-            environment name: 'GITHUB_REPOSITORY', value: 'ci-config-bundle'
+            environment name: 'GITHUB_REPOSITORY', value: 'cloudbees-ci-config-bundle'
           }
           environment {
             BUNDLE_ID = event.controller.bundle_id.toString().toLowerCase()  
@@ -48,7 +48,7 @@ pipeline {
         stage('Copy Files CasC Workshop') {
           when {
             not {
-              environment name: 'GITHUB_REPOSITORY', value: 'ci-config-bundle'
+              environment name: 'GITHUB_REPOSITORY', value: 'cloudbees-ci-config-bundle'
             }
           }
           steps {
