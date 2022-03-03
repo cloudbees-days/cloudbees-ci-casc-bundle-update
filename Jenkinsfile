@@ -79,6 +79,7 @@ pipeline {
                   sh "mkdir -p checkout"
                   sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git checkout"
                   dir('checkout') {
+                    sh "rm -rf ./controller.yaml || true"
                     sh "cp --parents `find -name \\*.yaml*` ../${BUNDLE_ID}/"
                   }
                   sh "kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins"
