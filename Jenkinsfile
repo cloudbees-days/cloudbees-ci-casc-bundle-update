@@ -41,8 +41,15 @@ pipeline {
               steps {
                 container("kubectl") {
                   sh "rm -rf ./${BUNDLE_ID} || true"
+                  sh "rm -rf ./checkout || true"
                   sh "mkdir -p ${BUNDLE_ID}"
-                  sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git ${BUNDLE_ID}"
+                  sh "mkdir -p checkout"
+                  sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git checkout"
+                  dir('checkout') {
+                    sh "rm -rf ./controller.yaml || true"
+                    sh "cp --parents `find -name \\*.yaml*` ../${BUNDLE_ID}/"
+                  }
+                  sh "ls -la ${BUNDLE_ID}"
                   sh "kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins"
                 }
               }              
