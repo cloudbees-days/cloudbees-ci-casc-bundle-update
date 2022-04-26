@@ -50,6 +50,7 @@ pipeline {
                     sh "cp --parents `find -name \\*.yaml*` ../${BUNDLE_ID}/"
                   }
                   sh "ls -la ${BUNDLE_ID}"
+                  sh "kubectl rm -rf --namespace cbci ${BUNDLE_ID}/cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkin"
                   sh "kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins"
                 }
               }              
