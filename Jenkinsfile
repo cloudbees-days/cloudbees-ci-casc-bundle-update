@@ -86,9 +86,8 @@ pipeline {
                   sh "mkdir -p ${BUNDLE_ID}"
                   sh "mkdir -p checkout"
                   sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git checkout"
-                  dir('checkout') {
-                    sh "rm -rf ./controller.yaml || true"
-                    sh "cp --parents `find -name \\*.yaml*` ../${BUNDLE_ID}/"
+                  dir('checkout/bundle') {
+                    sh "cp --parents `find -name \\*.yaml*` ../../${BUNDLE_ID}/"
                   }
                   sh "ls -la ${BUNDLE_ID}"
                   sh "kubectl exec cjoc-0 -c jenkins -- rm -rf /var/jenkins_home/jcasc-bundles-store/${BUNDLE_ID}/"
