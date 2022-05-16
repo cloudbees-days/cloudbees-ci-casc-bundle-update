@@ -108,11 +108,17 @@ pipeline {
               steps {
                 echo "begin config bundle reload"
                 withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
-                    sh '''
-                      sleep 7
-                      curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/check-bundle-update 
-                      curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle
-                    '''
+                  waitUntil {
+                    script {
+                      def UPDATE_AVAILABLE = sh (script: '''curl -s --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/check-bundle-update  | jq '.["update-available"]' | tr -d "\n" ''', 
+                        returnStdout: true) 
+                      echo "update available: ${UPDATE_AVAILABLE}"
+                      return (UPDATE_AVAILABLE=="true")
+                    }
+                  }
+                  sh '''
+                    curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle
+                  '''
                 }
               }
             }
