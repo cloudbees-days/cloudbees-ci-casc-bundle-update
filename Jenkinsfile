@@ -63,10 +63,10 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
                   waitUntil {
                     script {
-                      UPDATE_AVAILABLE = sh (script: '''curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/check-bundle-update  | jq -r '.update-available' | tr -d '\n' ''', 
+                      def UPDATE_AVAILABLE = sh (script: '''curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/check-bundle-update  | jq -r '.update-available' | tr -d '\n' ''', 
                         returnStdout: true) 
                       echo "update available: ${UPDATE_AVAILABLE}"
-                      return (UPDATE_AVAILABLE)
+                      return (UPDATE_AVAILABLE=="true")
                     }
                   }
                   sh '''                      
