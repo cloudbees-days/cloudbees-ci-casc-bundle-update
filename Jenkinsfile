@@ -119,6 +119,7 @@ pipeline {
                   sh '''
                     curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle
                   '''
+
                 }
               }
             }
