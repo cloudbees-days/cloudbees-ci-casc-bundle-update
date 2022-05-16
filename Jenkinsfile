@@ -41,8 +41,15 @@ pipeline {
               steps {
                 container("kubectl") {
                   sh "rm -rf ./${BUNDLE_ID} || true"
+                  sh "rm -rf ./checkout || true"
                   sh "mkdir -p ${BUNDLE_ID}"
-                  sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git ${BUNDLE_ID}"
+                  sh "mkdir -p checkout"
+                  sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git checkout"
+                  dir('checkout/bundle') {
+                    sh "cp --parents `find -name \\*.yaml*` ../../${BUNDLE_ID}/"
+                  }
+                  sh "ls -la ${BUNDLE_ID}"
+                  sh "kubectl exec cjoc-0 -c jenkins -- rm -rf /var/jenkins_home/jcasc-bundles-store/${BUNDLE_ID}/"
                   sh "kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins"
                 }
               }              
@@ -54,10 +61,17 @@ pipeline {
               steps {
                 echo "begin config bundle reload"
                 withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
-                    sh '''
-                      curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/check-bundle-update 
-                      curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle
-                    '''
+                  waitUntil {
+                    script {
+                      def UPDATE_AVAILABLE = sh (script: '''curl -s --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/check-bundle-update  | jq '.["update-available"]' | tr -d "\n" ''', 
+                        returnStdout: true) 
+                      echo "update available: ${UPDATE_AVAILABLE}"
+                      return (UPDATE_AVAILABLE=="true")
+                    }
+                  }
+                  sh '''                      
+                    curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle
+                  '''
                 }
               }
             }
@@ -74,8 +88,15 @@ pipeline {
               steps {
                 container("kubectl") {
                   sh "rm -rf ./${BUNDLE_ID} || true"
+                  sh "rm -rf ./checkout || true"
                   sh "mkdir -p ${BUNDLE_ID}"
-                  sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git ${BUNDLE_ID}"
+                  sh "mkdir -p checkout"
+                  sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git checkout"
+                  dir('checkout/bundle') {
+                    sh "cp --parents `find -name \\*.yaml*` ../../${BUNDLE_ID}/"
+                  }
+                  sh "ls -la ${BUNDLE_ID}"
+                  sh "kubectl exec cjoc-0 -c jenkins -- rm -rf /var/jenkins_home/jcasc-bundles-store/${BUNDLE_ID}/"
                   sh "kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins"
                 }
               }              
@@ -87,11 +108,18 @@ pipeline {
               steps {
                 echo "begin config bundle reload"
                 withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
-                    sh '''
-                      sleep 10
-                      curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/check-bundle-update 
-                      curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle
-                    '''
+                  waitUntil {
+                    script {
+                      def UPDATE_AVAILABLE = sh (script: '''curl -s --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/check-bundle-update  | jq '.["update-available"]' | tr -d "\n" ''', 
+                        returnStdout: true) 
+                      echo "update available: ${UPDATE_AVAILABLE}"
+                      return (UPDATE_AVAILABLE=="true")
+                    }
+                  }
+                  sh '''
+                    curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle
+                  '''
+
                 }
               }
             }
