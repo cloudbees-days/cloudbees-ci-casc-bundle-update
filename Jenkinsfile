@@ -6,7 +6,7 @@ pipeline {
     OPS_CASC_UPDATE_SECRET = credentials('casc-update-secret')
     CONTROLLER_CASC_UPDATE_SECRET = event.secret.toString()
   }
-  options { timeout(time: 10, unit: 'MINUTES') }
+  options { timeout(time: 4, unit: 'MINUTES') }
   triggers {
     eventTrigger jmespathQuery("controller.action=='casc_bundle_update'")
   }
@@ -60,18 +60,16 @@ pipeline {
               }
               steps {
                 echo "begin config bundle reload"
+                sh 'sleep 7'
                 withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
                   waitUntil {
                     script {
-                      def UPDATE_AVAILABLE = sh (script: '''curl -s --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/check-bundle-update  | jq '.["update-available"]' | tr -d "\n" ''', 
+                      def RELOADED = sh (script: '''curl -s --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle  | jq '.["reloaded"]' | tr -d "\n" ''', 
                         returnStdout: true) 
-                      echo "update available: ${UPDATE_AVAILABLE}"
-                      return (UPDATE_AVAILABLE=="true")
+                      echo "reloaded: ${RELOADED}"
+                      return (RELOADED=="true")
                     }
                   }
-                  sh '''                      
-                    curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle
-                  '''
                 }
               }
             }
