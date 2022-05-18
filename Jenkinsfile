@@ -54,7 +54,7 @@ pipeline {
               }
               steps {
                 echo "begin config bundle reload"
-                sh 'sleep 7'
+                sh 'sleep 45'
                 withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
                   waitUntil {
                     script {
