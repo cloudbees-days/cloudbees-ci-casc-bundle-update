@@ -58,7 +58,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
                   waitUntil {
                     script {
-                      def RELOADED = sh (script: '''curl -s --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle  | jq '.["reloaded"]' | tr -d "\n" ''', 
+                      def RELOADED = sh (script: '''curl -s --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle  | jq '.["reloaded"]' | tr -d "\n" ''', 
                         returnStdout: true) 
                       echo "reloaded: ${RELOADED}"
                       return (RELOADED=="true")
