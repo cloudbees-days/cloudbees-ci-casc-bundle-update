@@ -34,17 +34,28 @@ pipeline {
             stage('Copy Files') {
               steps {
                 container("kubectl") {
-                  sh "rm -rf ./${BUNDLE_ID} || true"
-                  sh "rm -rf ./checkout || true"
-                  sh "mkdir -p ${BUNDLE_ID}"
-                  sh "mkdir -p checkout"
-                  sh "git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git checkout"
+                  sh '''
+                    rm -rf ./${BUNDLE_ID} || true
+                    rm -rf ./checkout || true
+                    mkdir -p ${BUNDLE_ID}
+                    mkdir -p checkout
+                    git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git checkout
+                  '''
                   dir('checkout/bundle') {
                     sh "cp --parents `find -name \\*.yaml*` ../../${BUNDLE_ID}/"
                   }
-                  sh "ls -la ${BUNDLE_ID}"
-                  sh "kubectl exec cjoc-0 -c jenkins -- rm -rf /var/jenkins_home/jcasc-bundles-store/${BUNDLE_ID}/"
-                  sh "kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins"
+                  sh '''
+                    ls -la ${BUNDLE_ID}
+                    kubectl exec cjoc-0 -c jenkins -- rm -rf /var/jenkins_home/jcasc-bundles-store/${BUNDLE_ID}/
+                    kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins
+                  '''
+                  
+                  withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
+                    sh  '''
+                      curl --user "$JENKINS_CLI_USR:$JENKINS_CLI_PSW" -XPOST \
+                        http://cjoc/cjoc/load-casc-bundles/checkout
+                    '''
+                  }
                 }
               }              
             }
@@ -54,16 +65,8 @@ pipeline {
               }
               steps {
                 echo "begin config bundle reload"
-                sh 'sleep 45'
                 withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
-                  waitUntil {
-                    script {
-                      def RELOADED = sh (script: '''curl -s --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle  | jq '.["reloaded"]' | tr -d "\n" ''', 
-                        returnStdout: true) 
-                      echo "reloaded: ${RELOADED}"
-                      return (RELOADED=="true")
-                    }
-                  }
+                  sh '''curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle'''
                 }
               }
             }
