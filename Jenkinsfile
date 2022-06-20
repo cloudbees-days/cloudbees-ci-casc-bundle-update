@@ -44,28 +44,18 @@ pipeline {
                   dir('checkout/bundle') {
                     sh "cp --parents `find -name \\*.yaml*` ../../${BUNDLE_ID}/"
                   }
-                  withCredentials([usernamePassword(credentialsId: "cloudbees-ci-casc-workshop-github-app",
-                                          usernameVariable: 'GITHUB_APP',
-                                          passwordVariable: 'GITHUB_ACCESS_TOKEN')]) {
-                    sh '''
-                      ls -la ${BUNDLE_ID}
-                      mkdir -p workshop-casc-bundles
-                      cd workshop-casc-bundles
-                      git init
-                      git config user.email "beedemo-dev@workshop.cb-sa.io"
-                      git config user.name "cloudbees-days"
-                      git config pull.rebase false
-                      git remote add origin https://x-access-token:${GITHUB_ACCESS_TOKEN}@github.com/cloudbees-days/workshop-casc-bundles.git
-                      git pull origin main
-                      git checkout main
-                      rm -rf ${BUNDLE_ID} || true
-                      cp -r ../${BUNDLE_ID} .
-                      git add *
-                      git commit -a -m "updating bundle ${BUNDLE_ID}"
-                      git push origin main
+                  sh '''
+                    ls -la ${BUNDLE_ID}
+                    kubectl exec cjoc-0 -c jenkins -- rm -rf /var/jenkins_config/jcasc-bundles-store/${BUNDLE_ID}/
+                    kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_config/jcasc-bundles-store/ -c jenkins
+                  '''
+                  
+                  withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
+                    sh  '''
+                      curl --user "$JENKINS_CLI_USR:$JENKINS_CLI_PSW" -XPOST \
+                        http://cjoc/cjoc/load-casc-bundles/checkout
                     '''
                   }
-                  
                 }
               }              
             }
@@ -77,7 +67,6 @@ pipeline {
                 echo "begin config bundle reload"
                 withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
                   sh '''
-                    sleep 5
                     curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XGET http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/check-bundle-update
                     curl --user $JENKINS_CLI_USR:$JENKINS_CLI_PSW -XPOST http://${BUNDLE_ID}.controllers.svc.cluster.local/${BUNDLE_ID}/casc-bundle-mgnt/reload-bundle
                   '''
