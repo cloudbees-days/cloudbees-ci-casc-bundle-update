@@ -49,6 +49,13 @@ pipeline {
                     kubectl exec cjoc-0 -c jenkins -- rm -rf /var/jenkins_home/jcasc-bundles-store/${BUNDLE_ID}/
                     kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_home/jcasc-bundles-store/ -c jenkins
                   '''
+                  
+                  withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
+                    sh  '''
+                      curl --user "$JENKINS_CLI_USR:$JENKINS_CLI_PSW" -XPOST \
+                        http://cjoc/cjoc/load-casc-bundles/checkout
+                    '''
+                  }
                 }
               }              
             }
