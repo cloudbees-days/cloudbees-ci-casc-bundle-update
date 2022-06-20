@@ -44,11 +44,27 @@ pipeline {
                   dir('checkout/bundle') {
                     sh "cp --parents `find -name \\*.yaml*` ../../${BUNDLE_ID}/"
                   }
-                  sh '''
-                    ls -la ${BUNDLE_ID}
-                    kubectl exec cjoc-0 -c jenkins -- rm -rf /var/jenkins_config/jcasc-bundles-store/${BUNDLE_ID}/
-                    kubectl cp --namespace cbci ${BUNDLE_ID} cjoc-0:/var/jenkins_config/jcasc-bundles-store/ -c jenkins
-                  '''
+                  withCredentials([usernamePassword(credentialsId: "cloudbees-ci-casc-workshop-github-app",
+                                          usernameVariable: 'GITHUB_APP',
+                                          passwordVariable: 'GITHUB_ACCESS_TOKEN')]) {
+                    sh '''
+                      ls -la ${BUNDLE_ID}
+                      mkdir -p workshop-casc-bundles
+                      cd workshop-casc-bundles
+                      git init
+                      git config user.email "beedemo-dev@workshop.cb-sa.io"
+                      git config user.name "cloudbees-days"
+                      git config pull.rebase false
+                      git remote add origin https://x-access-token:${GITHUB_ACCESS_TOKEN}@github.com/cloudbees-days/workshop-casc-bundles.git
+                      git pull origin main
+                      git checkout main
+                      rm -rf ${BUNDLE_ID} || true
+                      cp ../${BUNDLE_ID} .
+                      git add *
+                      git commit -a -m "updating bundle ${BUNDLE_ID}"
+                      git push origin main
+                    '''
+                  }
                   
                   withCredentials([usernamePassword(credentialsId: 'admin-cli-token', usernameVariable: 'JENKINS_CLI_USR', passwordVariable: 'JENKINS_CLI_PSW')]) {
                     sh  '''
