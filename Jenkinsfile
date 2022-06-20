@@ -59,7 +59,7 @@ pipeline {
                       git pull origin main
                       git checkout main
                       rm -rf ${BUNDLE_ID} || true
-                      cp ../${BUNDLE_ID} .
+                      cp -r ../${BUNDLE_ID} .
                       git add *
                       git commit -a -m "updating bundle ${BUNDLE_ID}"
                       git push origin main
