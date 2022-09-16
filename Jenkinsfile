@@ -40,6 +40,7 @@ pipeline {
                     mkdir -p ${BUNDLE_ID}
                     mkdir -p checkout
                     git clone https://github.com/${GITHUB_ORGANIZATION}/${GITHUB_REPOSITORY}.git checkout
+                    sed -i "s/REPLACE_REPO/$GITHUB_REPOSITORY/g" checkout/bundle/bundle.yaml
                   '''
                   dir('checkout/bundle') {
                     sh "cp --parents `find -name \\*.yaml*` ../../${BUNDLE_ID}/"
